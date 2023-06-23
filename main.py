@@ -5,9 +5,9 @@ from tqdm import tqdm
 from PIL import Image
 
 #########################################################################################################################
-# We will try a simple approach to determining the health:
+# We will try a simple approach to determine the health:
 
-# Because there are little cromatic aberations that we don't want to include,
+# Because there are some cromatic aberations that we don't want to include,
 # we will use hue values to determine which pixels have the correct color and transform the images to grayscale
 # in order to determine if they are coloured or not.
 
