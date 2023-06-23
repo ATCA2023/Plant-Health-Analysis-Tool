@@ -4,37 +4,40 @@ from concurrent.futures import ProcessPoolExecutor, as_completed    # Import use
 from tqdm import tqdm
 from PIL import Image
 
+#########################################################################################################################
 # We will try a simple approach to determining the health:
 
 # Because there are little cromatic aberations that we don't want to include,
 # we will use hue values to determine which pixels have the correct color and transform the images to grayscale
-# to determine if they are colored or not.
+# in order to determine if they are coloured or not.
 
 # The pixels will be checked in a little circle centered in the middle of each picture because that's where the magnetic
 # field is being measured
+#########################################################################################################################
 
-def calculate_hue_range(image_path):        # This function can be run by the user before the actual health analysis
-    image = Image.open(image_path)          # It is here so that the user gets a idea of what the average hue ranges
-    pixels = image.load()                   # can be found in the images
+
+def calculate_hue_range(image_path):            # This function can be run by the user before the actual health analysis
+    image = Image.open(image_path)              # It is here so that the user gets an idea of what the average hue ranges
+    pixels = image.load()                       # can be found in the images
     width, height = image.size
 
-    min_hue = 360                           # Initialize variables
+    min_hue = 360                               # Initialize variables
     max_hue = 0.0
     colored_pixel_count = 0
 
-    for y in range(height):                 # Analyzing a photo
+    for y in range(height):                     # Analyzing a photo
         for x in range(width):
             r, g, b = pixels[x, y]
             grayscale_value = (r + g + b) // 3  # Calculate grayscale value
 
 
-            if (r, g, b) != (grayscale_value, grayscale_value, grayscale_value): # Exclude black, white, and gray pixels
+            if (r, g, b) != (grayscale_value, grayscale_value, grayscale_value):     # Exclude black, white, and gray pixels
 
-                h, _, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)  # Calculate hue value for the colored pixel
-                h_degrees = h * 360.0  # Convert hue to degrees
+                h, _, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)             # Calculate hue value for the coloured pixel
+                h_degrees = h * 360.0                                                # Convert hue to degrees
 
 
-                if h_degrees != 0.0 and h_degrees != 360.0: # Exclude hue values of 0 and 360
+                if h_degrees != 0.0 and h_degrees != 360.0:                           # Exclude hue values of 0 and 360
                     min_hue = min(min_hue, h_degrees)
                     max_hue = max(max_hue, h_degrees)
                     colored_pixel_count += 1
@@ -51,21 +54,21 @@ def count_pixels_with_hue_range(image_path, hue_range, center_x, center_y, radiu
 
     hue_count = 0
 
-    for y in range(center_y - radius, center_y + radius + 1):  # We're only searching the central area of the measurement
-        if 0 <= y < height:  # Ensure y coordinate is within image bounds
+    for y in range(center_y - radius, center_y + radius + 1):                      # We're only searching the central area of the measurement
+        if 0 <= y < height:                                                        # Ensure y coordinate is within image bounds
             for x in range(center_x - radius, center_x + radius + 1):
-                if 0 <= x < width:  # Ensure x coordinate is within image bounds
-                        # Check if the pixel is within the circular area
+                if 0 <= x < width:                                                 # Ensure x coordinate is within image bounds
+                                                                                   # Checking if the pixel is within the circular area
                     if (x - center_x) ** 2 + (y - center_y) ** 2 <= radius ** 2:
                         r, g, b = pixels[x, y]
 
-                        grayscale_value = (r + g + b) // 3  # Same operations as before
+                        grayscale_value = (r + g + b) // 3                         # Same operations as before
 
-                            # Exclude black, white, and gray pixels
+                                                                                   # Exclude black, white, and gray pixels
                         if (r, g, b) != (grayscale_value, grayscale_value, grayscale_value):
-                                # Calculate hue value for the colored pixel
+                                                                                   # Calculate hue value for the colored pixel
                             h, _, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-                            h_degrees = h * 360.0  # Convert hue to degrees
+                            h_degrees = h * 360.0                                  # Convert hue to degrees
 
                             if hue_range[0] <= h_degrees <= hue_range[1]:
                                 hue_count += 1
@@ -74,10 +77,10 @@ def count_pixels_with_hue_range(image_path, hue_range, center_x, center_y, radiu
 
 
 if __name__ == '__main__':
-    image_folder = 'hue'  # My folder path to the images
+    image_folder = 'hue'                                                   # My folder path to the images
     image_files = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder) if filename.endswith((".jpg", ".png"))]
 
-    total_images = len(image_files)     # Using the functions and making a small UI for usability
+    total_images = len(image_files)                                        # Using the functions and making a small UI for usability
 
     analyze_images = input("Do you want to analyze each image (~3 minutes)? (yes/no): ").lower().strip() == "yes"
 
@@ -112,9 +115,9 @@ if __name__ == '__main__':
     colored_pixel_count_sum = 0
 
 
-    hue_range = (average_min_hue, average_max_hue)   # Using the specified hue range to count pixels
+    hue_range = (average_min_hue, average_max_hue)                                      # Using the specified hue range to count pixels
 
-    # Calculate the center of the image
+                                                                                         # Calculate the center of the image
     image = Image.open(image_files[0])
     width, height = image.size
     center_x = width // 2
@@ -147,4 +150,4 @@ if __name__ == '__main__':
             score = 100 * (pixel_count - min_pixels) / (max_pixels - min_pixels)
             f.write(f"Image {i+1}: Score - {format(score, '.10f')}\n")
 
-    print("Scores saved in 'scores.txt' file.") # Print results
+    print("Scores saved in 'scores.txt' file.")                                     # Print results
